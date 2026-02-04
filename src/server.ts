@@ -8,6 +8,12 @@ const PORT = 3000;
 const DATA_FILE = path.join(__dirname, '..', 'data', 'migrations_latest.json');
 const PUBLIC_DIR = path.join(__dirname, '..', 'public');
 
+// Disable caching for all requests
+app.use((req, res, next) => {
+    res.set('Cache-Control', 'no-store, no-cache, must-revalidate, private');
+    next();
+});
+
 // Serve static files
 app.use(express.static(PUBLIC_DIR));
 
@@ -30,6 +36,8 @@ app.get('/api/migrations', (req, res) => {
         res.status(500).json({ error: 'Failed to load migrations data' });
     }
 });
+
+
 
 // Serve index.html for root
 app.get('/', (req, res) => {

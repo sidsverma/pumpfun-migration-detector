@@ -68,7 +68,9 @@
         .header p {
             color: var(--text-secondary);
             font-size: 1.1rem;
+            margin-bottom: 1.5rem;
         }
+
 
         /* Stats Cards */
         .stats-grid {
@@ -341,7 +343,7 @@
     <div class="container">
         <header class="header">
             <h1>🚀 Pump.fun Migration Tracker</h1>
-            <p>Real-time tracking of tokens migrating from Pump.fun bonding curve</p>
+            <p>Live Data (> $20k MC) • Last 6 Hours</p>
         </header>
 
         <div class="stats-grid" id="stats">
@@ -377,7 +379,7 @@
                             <th>Migration Tx</th>
                             <th>DEX Journey</th>
                             <th>Market Cap</th>
-                            <th>Time</th>
+                            <th>Time (Ago)</th>
                         </tr>
                     </thead>
                     <tbody id="migrations-table">
@@ -423,6 +425,21 @@
                 minute: '2-digit',
                 hour12: true
             });
+        }
+
+
+        function timeAgo(date) {
+            const seconds = Math.floor((new Date() - new Date(date)) / 1000);
+
+            let interval = seconds / 3600;
+            if (interval > 1) {
+                return Math.floor(interval) + "h ago";
+            }
+            interval = seconds / 60;
+            if (interval > 1) {
+                return Math.floor(interval) + "m ago";
+            }
+            return Math.floor(seconds) + "s ago";
         }
 
         function formatDate(isoString) {
@@ -548,8 +565,8 @@
                     </td>
                     <td>
                         <div class="time-cell">
-                            ${formatTime(m.time)}<br>
-                            <span style="color: var(--text-muted)">${formatDate(m.time)}</span>
+                            <span style="color: var(--text-primary); font-weight: 500;">${timeAgo(m.time)}</span><br>
+                            <span style="color: var(--text-muted); font-size: 0.75rem;">${formatTime(m.time)}</span>
                         </div>
                     </td>
                 </tr>
@@ -568,6 +585,7 @@
             document.getElementById('time-window').textContent = `${data.window_seconds / 60} min`;
             document.getElementById('last-updated').textContent = `Last updated: ${formatTime(data.run_at)} on ${formatDate(data.run_at)}`;
         }
+
 
         // Load data
         async function loadData() {

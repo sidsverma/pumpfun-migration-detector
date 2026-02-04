@@ -21,7 +21,7 @@ function ensureDataDir(): void {
 
 function parseArgs(): { windowSeconds: number; continuous: boolean } {
     const args = process.argv.slice(2);
-    let windowSeconds = 300; // Default: 5 minutes
+    let windowSeconds = 21600; // Default: 6 hours
     let continuous = true;
 
     for (const arg of args) {
@@ -89,7 +89,7 @@ async function enrichMigrations(
                 });
             } else {
                 // Optional: log dropped low cap coins
-                // console.log(`Skipping ${metadata.symbol || migration.mint} (MC: $${priceData.marketCapUsd?.toFixed(2) || 'N/A'})`);
+                console.log(`Skipping ${metadata.symbol || migration.mint} (MC: $${priceData.marketCapUsd?.toFixed(2) || 'N/A'}) - Below $20k`);
             }
         } catch (error) {
             console.warn(`Failed to enrich migration ${migration.signature}:`, error);

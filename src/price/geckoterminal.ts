@@ -49,11 +49,13 @@ export class GeckoTerminalProvider extends BasePriceProvider {
             };
 
             if (this.apiKey) {
-                // Use Pro API
+                // Use Pro API (v3 On-chain)
+                // Docs: https://docs.coingecko.com/v3.0.1/reference/onchain-networks-tokens-address
                 url = `${COINGECKO_PRO_API}/networks/solana/tokens/${mint}`;
                 headers['x-cg-pro-api-key'] = this.apiKey;
+                // console.log('Using CoinGecko Pro API for', mint);
             } else {
-                // Use Public API
+                // Use Public GeckoTerminal API (v2)
                 url = `${GECKOTERMINAL_API}/networks/solana/tokens/${mint}`;
             }
 
