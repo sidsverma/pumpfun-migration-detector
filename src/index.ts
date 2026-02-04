@@ -57,7 +57,12 @@ async function enrichMigrations(
             const metadata = await metadataFetcher.fetchMetadata(migration.mint);
 
             // Fetch price data
-            let priceData = await priceProvider.getPrice(migration.mint);
+            let priceData: { priceUsd: number | null, marketCapUsd: number | null } = { priceUsd: null, marketCapUsd: null };
+            try {
+                priceData = await priceProvider.getPrice(migration.mint);
+            } catch (err) {
+                console.warn(`⚠️ Price fetch failed for ${migration.mint}, skipping price data.`);
+            }
 
             // If no market cap, try to calculate from supply
             if (priceData.priceUsd && !priceData.marketCapUsd) {
@@ -70,29 +75,27 @@ async function enrichMigrations(
                 }
             }
 
-            results.push({
-                time: formatIsoTime(migration.blockTime),
-                signature: migration.signature,
-                mint: migration.mint,
-                symbol: metadata.symbol,
-                name: metadata.name,
-                market_cap_usd: priceData.marketCapUsd,
-                price_usd: priceData.priceUsd,
-                destination: migration.destination,
-            });
+            // Filter by Market Cap (Minimum $20k)
+            if (priceData.marketCapUsd && priceData.marketCapUsd >= 20000) {
+                results.push({
+                    time: formatIsoTime(migration.blockTime),
+                    signature: migration.signature,
+                    mint: migration.mint,
+                    symbol: metadata.symbol,
+                    name: metadata.name,
+                    market_cap_usd: priceData.marketCapUsd,
+                    price_usd: priceData.priceUsd,
+                    destination: migration.destination,
+                });
+            } else {
+                // Optional: log dropped low cap coins
+                // console.log(`Skipping ${metadata.symbol || migration.mint} (MC: $${priceData.marketCapUsd?.toFixed(2) || 'N/A'})`);
+            }
         } catch (error) {
             console.warn(`Failed to enrich migration ${migration.signature}:`, error);
             // Still include the migration with basic data
-            results.push({
-                time: formatIsoTime(migration.blockTime),
-                signature: migration.signature,
-                mint: migration.mint,
-                symbol: null,
-                name: null,
-                market_cap_usd: null,
-                price_usd: null,
-                destination: migration.destination,
-            });
+            // Skip if enrichment failed (since we can't verify >25k cap)
+            console.warn(`Skipping due to enrichment failure: ${migration.signature}`);
         }
     }
 
@@ -167,7 +170,7 @@ async function main(): Promise<void> {
     const metadataFetcher = new MetadataFetcher(rpcClient.getConnection(), config.solanaRpcUrl);
 
     // Use GeckoTerminal by default, fallback to null provider on repeated failures
-    let priceProvider: BasePriceProvider = new GeckoTerminalProvider();
+    const priceProvider = new GeckoTerminalProvider(config.priceApiKey);
 
     // Initial run
     await runDetection(config, windowSeconds, detector, metadataFetcher, priceProvider, rpcClient);

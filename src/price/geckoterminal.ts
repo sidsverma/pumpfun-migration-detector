@@ -3,6 +3,8 @@ import { PriceData } from './types';
 import { withRetry, sleep } from '../utils/retry';
 
 const GECKOTERMINAL_API = 'https://api.geckoterminal.com/api/v2';
+// CoinGecko Pro On-Chain API (uses same endpoints structure as GeckoTerminal but on pro domain)
+const COINGECKO_PRO_API = 'https://pro-api.coingecko.com/api/v3/onchain';
 
 interface GeckoTokenResponse {
     data?: {
@@ -16,7 +18,17 @@ interface GeckoTokenResponse {
 
 export class GeckoTerminalProvider extends BasePriceProvider {
     private lastRequestTime = 0;
-    private minRequestInterval = 200; // Rate limit: 5 requests per second
+    private minRequestInterval = 200; // Default: 5 rps
+    private apiKey?: string;
+
+    constructor(apiKey?: string) {
+        super();
+        this.apiKey = apiKey;
+        // If we have a pro key, we can go much faster (e.g. 500 requests/min = ~100ms interval)
+        if (this.apiKey) {
+            this.minRequestInterval = 50;
+        }
+    }
 
     private async rateLimit(): Promise<void> {
         const now = Date.now();
@@ -31,22 +43,29 @@ export class GeckoTerminalProvider extends BasePriceProvider {
         try {
             await this.rateLimit();
 
-            const url = `${GECKOTERMINAL_API}/networks/solana/tokens/${mint}`;
+            let url: string;
+            const headers: Record<string, string> = {
+                'Accept': 'application/json',
+            };
+
+            if (this.apiKey) {
+                // Use Pro API
+                url = `${COINGECKO_PRO_API}/networks/solana/tokens/${mint}`;
+                headers['x-cg-pro-api-key'] = this.apiKey;
+            } else {
+                // Use Public API
+                url = `${GECKOTERMINAL_API}/networks/solana/tokens/${mint}`;
+            }
 
             const response = await withRetry(async () => {
-                const res = await fetch(url, {
-                    headers: {
-                        'Accept': 'application/json',
-                    },
-                });
+                const res = await fetch(url, { headers });
 
                 if (res.status === 404) {
-                    // Token not found - this is expected for new tokens
                     return null;
                 }
 
                 if (!res.ok) {
-                    throw new Error(`GeckoTerminal API error: ${res.status}`);
+                    throw new Error(`Price API error: ${res.status}`);
                 }
 
                 return res.json() as Promise<GeckoTokenResponse>;
@@ -72,8 +91,10 @@ export class GeckoTerminalProvider extends BasePriceProvider {
                 marketCapUsd: !isNaN(marketCapUsd!) ? marketCapUsd : null,
             };
         } catch (error) {
-            console.warn(`Failed to fetch price for ${mint}:`, error);
-            return { priceUsd: null, marketCapUsd: null };
+            // Only log if it's not a generic "skip" from higher level
+            // console.warn(`Failed to fetch price for ${mint}:`, error);
+            // Re-throw to let the resilience logic in index.ts handle it
+            throw error;
         }
     }
 }

@@ -41,6 +41,8 @@ Edit `.env` file:
 
 ```env
 SOLANA_RPC_URL=https://mainnet.helius-rpc.com/?api-key=YOUR_API_KEY
+# Optional: CoinGecko Pro API Key for faster price data
+PRICE_API_KEY=CG-xxxxxxxxx
 ```
 
 ### Usage
