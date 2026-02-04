@@ -1,0 +1,13 @@
+{
+    "pollingIntervalMs": 300000,
+    "ignoreMints": [
+        "So11111111111111111111111111111111111111112",
+        "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v"
+    ],
+    "windowSeconds": {
+        "short": 300,
+        "long": 3600
+    },
+    "maxSignaturesPerFetch": 1000,
+    "concurrencyLimit": 10
+}

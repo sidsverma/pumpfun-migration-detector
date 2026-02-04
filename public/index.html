@@ -1,0 +1,601 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pump.fun Migration Tracker</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-primary: #0a0a0f;
+            --bg-secondary: #12121a;
+            --bg-card: #1a1a24;
+            --bg-hover: #22222e;
+            --border-color: #2a2a3a;
+            --text-primary: #ffffff;
+            --text-secondary: #a0a0b0;
+            --text-muted: #666680;
+            --accent-green: #00d4aa;
+            --accent-green-dim: rgba(0, 212, 170, 0.15);
+            --accent-purple: #a855f7;
+            --accent-purple-dim: rgba(168, 85, 247, 0.15);
+            --accent-blue: #3b82f6;
+            --accent-orange: #f59e0b;
+            --gradient-start: #667eea;
+            --gradient-end: #764ba2;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            min-height: 100vh;
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        /* Header */
+        .header {
+            text-align: center;
+            margin-bottom: 3rem;
+            padding: 2rem 0;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, var(--gradient-start), var(--gradient-end));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 0.5rem;
+        }
+
+        .header p {
+            color: var(--text-secondary);
+            font-size: 1.1rem;
+        }
+
+        /* Stats Cards */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2.5rem;
+        }
+
+        .stat-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            padding: 1.5rem;
+            text-align: center;
+            transition: transform 0.2s, border-color 0.2s;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-2px);
+            border-color: var(--accent-purple);
+        }
+
+        .stat-value {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--accent-green);
+        }
+
+        .stat-label {
+            color: var(--text-secondary);
+            font-size: 0.875rem;
+            margin-top: 0.25rem;
+        }
+
+        /* Table Container */
+        .table-container {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            overflow: hidden;
+        }
+
+        .table-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1.25rem 1.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .table-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+        }
+
+        .last-updated {
+            color: var(--text-muted);
+            font-size: 0.875rem;
+        }
+
+        /* Table */
+        .table-scroll {
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th {
+            background: var(--bg-secondary);
+            padding: 1rem 1.25rem;
+            text-align: left;
+            font-weight: 600;
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-secondary);
+            white-space: nowrap;
+        }
+
+        td {
+            padding: 1rem 1.25rem;
+            border-bottom: 1px solid var(--border-color);
+            vertical-align: middle;
+        }
+
+        tr:hover td {
+            background: var(--bg-hover);
+        }
+
+        tr:last-child td {
+            border-bottom: none;
+        }
+
+        /* Token Info */
+        .token-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .token-name {
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .token-symbol {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .token-symbol .badge {
+            background: var(--accent-purple-dim);
+            color: var(--accent-purple);
+            padding: 0.2rem 0.5rem;
+            border-radius: 6px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+
+        /* Links */
+        a {
+            color: var(--accent-blue);
+            text-decoration: none;
+            transition: color 0.2s;
+        }
+
+        a:hover {
+            color: var(--accent-purple);
+        }
+
+        .link-cell {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .link-row {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .link-icon {
+            width: 18px;
+            height: 18px;
+            opacity: 0.7;
+        }
+
+        .ca-link {
+            font-family: 'SF Mono', 'Monaco', 'Consolas', monospace;
+            font-size: 0.85rem;
+            color: var(--accent-green);
+        }
+
+        .ca-link:hover {
+            color: var(--text-primary);
+        }
+
+        /* DEX Badges */
+        .dex-badges {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .dex-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+            padding: 0.35rem 0.75rem;
+            border-radius: 8px;
+            font-size: 0.8rem;
+            font-weight: 500;
+            width: fit-content;
+        }
+
+        .dex-badge.pre {
+            background: rgba(249, 115, 22, 0.15);
+            color: #fb923c;
+            border: 1px solid rgba(249, 115, 22, 0.3);
+        }
+
+        .dex-badge.post {
+            background: var(--accent-green-dim);
+            color: var(--accent-green);
+            border: 1px solid rgba(0, 212, 170, 0.3);
+        }
+
+        .dex-icon {
+            width: 14px;
+            height: 14px;
+        }
+
+        /* Market Cap */
+        .market-cap {
+            font-weight: 600;
+            font-size: 1rem;
+        }
+
+        .price {
+            color: var(--text-secondary);
+            font-size: 0.85rem;
+        }
+
+        /* Time */
+        .time-cell {
+            color: var(--text-secondary);
+            font-size: 0.875rem;
+            white-space: nowrap;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .container {
+                padding: 1rem;
+            }
+
+            .header h1 {
+                font-size: 1.75rem;
+            }
+
+            .stats-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            th,
+            td {
+                padding: 0.75rem;
+            }
+        }
+
+        /* Loading State */
+        .loading {
+            text-align: center;
+            padding: 4rem 2rem;
+            color: var(--text-secondary);
+        }
+
+        .loading-spinner {
+            width: 40px;
+            height: 40px;
+            border: 3px solid var(--border-color);
+            border-top-color: var(--accent-purple);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 1rem;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        /* Empty State */
+        .empty-state {
+            text-align: center;
+            padding: 4rem 2rem;
+            color: var(--text-secondary);
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <header class="header">
+            <h1>🚀 Pump.fun Migration Tracker</h1>
+            <p>Real-time tracking of tokens migrating from Pump.fun bonding curve</p>
+        </header>
+
+        <div class="stats-grid" id="stats">
+            <div class="stat-card">
+                <div class="stat-value" id="total-migrations">--</div>
+                <div class="stat-label">Total Migrations</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="unique-tokens">--</div>
+                <div class="stat-label">Unique Tokens</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="total-mcap">--</div>
+                <div class="stat-label">Total Market Cap</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="time-window">--</div>
+                <div class="stat-label">Time Window</div>
+            </div>
+        </div>
+
+        <div class="table-container">
+            <div class="table-header">
+                <h2 class="table-title">Recent Migrations</h2>
+                <span class="last-updated" id="last-updated">Loading...</span>
+            </div>
+            <div class="table-scroll">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Token</th>
+                            <th>Contract Address</th>
+                            <th>Migration Tx</th>
+                            <th>DEX Journey</th>
+                            <th>Market Cap</th>
+                            <th>Time</th>
+                        </tr>
+                    </thead>
+                    <tbody id="migrations-table">
+                        <tr>
+                            <td colspan="6">
+                                <div class="loading">
+                                    <div class="loading-spinner"></div>
+                                    <p>Loading migration data...</p>
+                                </div>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Helper functions
+        function shortenAddress(address, chars = 4) {
+            if (!address) return 'N/A';
+            return `${address.slice(0, chars)}...${address.slice(-chars)}`;
+        }
+
+        function formatCurrency(value) {
+            if (value === null || value === undefined) return 'N/A';
+            if (value >= 1000000) return `$${(value / 1000000).toFixed(2)}M`;
+            if (value >= 1000) return `$${(value / 1000).toFixed(2)}K`;
+            return `$${value.toFixed(2)}`;
+        }
+
+        function formatPrice(value) {
+            if (value === null || value === undefined) return 'N/A';
+            if (value < 0.000001) return `$${value.toExponential(2)}`;
+            if (value < 0.01) return `$${value.toFixed(8)}`;
+            return `$${value.toFixed(4)}`;
+        }
+
+        function formatTime(isoString) {
+            const date = new Date(isoString);
+            return date.toLocaleTimeString('en-US', {
+                hour: '2-digit',
+                minute: '2-digit',
+                hour12: true
+            });
+        }
+
+        function formatDate(isoString) {
+            const date = new Date(isoString);
+            return date.toLocaleDateString('en-US', {
+                month: 'short',
+                day: 'numeric',
+                year: 'numeric'
+            });
+        }
+
+        function getDexScreenerUrl(mint) {
+            return `https://dexscreener.com/solana/${mint}`;
+        }
+
+        function getSolscanTxUrl(signature) {
+            return `https://solscan.io/tx/${signature}`;
+        }
+
+        function getPumpSwapUrl(mint) {
+            return `https://pump.fun/${mint}`;
+        }
+
+        function getRaydiumUrl(mint) {
+            return `https://raydium.io/swap/?inputMint=sol&outputMint=${mint}`;
+        }
+
+        function getPostDexUrl(mint, destination) {
+            if (destination === 'pumpswap') {
+                return `https://pump.fun/${mint}`;
+            }
+            return `https://raydium.io/swap/?inputMint=sol&outputMint=${mint}`;
+        }
+
+        function getPostDexLabel(destination) {
+            if (destination === 'pumpswap') {
+                return '🟢 Post: PumpSwap';
+            }
+            if (destination === 'raydium') {
+                return '🔵 Post: Raydium';
+            }
+            return '⚪ Post: Unknown';
+        }
+
+        // Aggregate migrations by token (unique mints)
+        function aggregateMigrations(migrations) {
+            const tokenMap = new Map();
+
+            migrations.forEach(m => {
+                if (!tokenMap.has(m.mint)) {
+                    tokenMap.set(m.mint, {
+                        ...m,
+                        txCount: 1,
+                        allSignatures: [m.signature]
+                    });
+                } else {
+                    const existing = tokenMap.get(m.mint);
+                    existing.txCount++;
+                    existing.allSignatures.push(m.signature);
+                }
+            });
+
+            return Array.from(tokenMap.values());
+        }
+
+        // Render the table
+        function renderTable(data) {
+            const tbody = document.getElementById('migrations-table');
+            const aggregated = aggregateMigrations(data.migrations);
+
+            // Sort by market cap (highest first)
+            aggregated.sort((a, b) => (b.market_cap_usd || 0) - (a.market_cap_usd || 0));
+
+            if (aggregated.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="6">
+                            <div class="empty-state">
+                                <p>No migrations found in this time window.</p>
+                            </div>
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+
+            tbody.innerHTML = aggregated.map(m => `
+                <tr>
+                    <td>
+                        <div class="token-info">
+                            <span class="token-name">${m.name || 'Unknown Token'}</span>
+                            <span class="token-symbol">
+                                ${m.symbol ? `<span class="badge">${m.symbol}</span>` : ''}
+                            </span>
+                        </div>
+                    </td>
+                    <td>
+                        <a href="${getDexScreenerUrl(m.mint)}" target="_blank" class="ca-link" title="${m.mint}">
+                            ${shortenAddress(m.mint, 6)}
+                        </a>
+                    </td>
+                    <td>
+                        <div class="link-cell">
+                            <a href="${getSolscanTxUrl(m.signature)}" target="_blank" title="View on Solscan">
+                                🔗 ${shortenAddress(m.signature, 6)}
+                            </a>
+                            ${m.txCount > 1 ? `<span style="color: var(--text-muted); font-size: 0.75rem;">+${m.txCount - 1} more tx</span>` : ''}
+                        </div>
+                    </td>
+                    <td>
+                        <div class="dex-badges">
+                            <a href="https://pump.fun/${m.mint}" target="_blank" class="dex-badge pre">
+                                🟠 Pre: Pump.fun
+                            </a>
+                            <a href="${getPostDexUrl(m.mint, m.destination)}" target="_blank" class="dex-badge post">
+                                ${getPostDexLabel(m.destination)}
+                            </a>
+                        </div>
+                    </td>
+                    <td>
+                        <div class="market-cap">${formatCurrency(m.market_cap_usd)}</div>
+                        <div class="price">${formatPrice(m.price_usd)}</div>
+                    </td>
+                    <td>
+                        <div class="time-cell">
+                            ${formatTime(m.time)}<br>
+                            <span style="color: var(--text-muted)">${formatDate(m.time)}</span>
+                        </div>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        // Update stats
+        function updateStats(data) {
+            const aggregated = aggregateMigrations(data.migrations);
+            const totalMcap = data.migrations.reduce((sum, m) => sum + (m.market_cap_usd || 0), 0);
+            const uniqueMcap = aggregated.reduce((sum, m) => sum + (m.market_cap_usd || 0), 0);
+
+            document.getElementById('total-migrations').textContent = data.migrations.length;
+            document.getElementById('unique-tokens').textContent = aggregated.length;
+            document.getElementById('total-mcap').textContent = formatCurrency(uniqueMcap);
+            document.getElementById('time-window').textContent = `${data.window_seconds / 60} min`;
+            document.getElementById('last-updated').textContent = `Last updated: ${formatTime(data.run_at)} on ${formatDate(data.run_at)}`;
+        }
+
+        // Load data
+        async function loadData() {
+            try {
+                const response = await fetch('/api/migrations');
+                const data = await response.json();
+                updateStats(data);
+                renderTable(data);
+            } catch (error) {
+                console.error('Error loading data:', error);
+                document.getElementById('migrations-table').innerHTML = `
+                    <tr>
+                        <td colspan="6">
+                            <div class="empty-state">
+                                <p>Error loading data. Please refresh the page.</p>
+                            </div>
+                        </td>
+                    </tr>
+                `;
+            }
+        }
+
+        // Initial load
+        loadData();
+
+        // Auto-refresh every 30 seconds
+        setInterval(loadData, 30000);
+    </script>
+</body>
+
+</html>
